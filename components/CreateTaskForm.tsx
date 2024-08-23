@@ -28,15 +28,21 @@ export function CreateTaskForm() {
         e.preventDefault();
         e.stopPropagation();
 
-        mutateAsync(value);
+        mutateAsync(value.trim());
       }}
-      className="flex justify-between items-center gap-4"
+      className="flex justify-between items-center gap-5"
     >
       <InputField
         value={value}
         onChange={(event) => setValue(event.target.value)}
+        placeholder="Enter task name"
       />
-      <Button type="submit" colorScheme="primary" isLoading={isPending}>
+      <Button
+        type="submit"
+        colorScheme="primary"
+        isLoading={isPending}
+        isDisabled={value.trim() === ""}
+      >
         Add Task
       </Button>
     </form>
