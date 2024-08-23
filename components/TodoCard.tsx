@@ -1,13 +1,9 @@
 "use client";
+import type { Todo } from "@prisma/client";
 import { Button, InputField } from "@rafty/ui";
 import { useState } from "react";
 
-export type TodoCard = {
-  task: string;
-  status: boolean;
-};
-
-export function TodoCard({ status, task }: TodoCard) {
+export function TodoCard({ status, task }: Todo) {
   const [isOpen, setOpen] = useState(false);
 
   return (

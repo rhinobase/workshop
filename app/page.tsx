@@ -1,19 +1,20 @@
 "use client";
 import { TodoCard } from "@/components/TodoCard";
+import type { Todo } from "@prisma/client";
 import { Button, InputField } from "@rafty/ui";
 import { useState } from "react";
 
 const DATA = Array.from({ length: 10 }).fill({
   task: "Lorem Ipsum",
   status: true,
-}) as TodoCard[];
+}) as Todo[];
 
 export default function Home() {
   const [value, setValue] = useState("");
   const [tasks, setTasks] = useState(DATA);
 
   const onAdd = () => {
-    const newTask = { task: value, status: false };
+    const newTask = { id: "123", task: value, status: false };
     setTasks((prevTasks) => [...prevTasks, newTask]);
     setValue("");
   };
