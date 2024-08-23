@@ -1,31 +1,59 @@
 "use client";
+import { endpoint } from "@/utils";
 import type { Todo } from "@prisma/client";
-import { Button, InputField } from "@rafty/ui";
-import { useState } from "react";
+import { Button, Checkbox, Label } from "@rafty/ui";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-export function TodoCard({ status, task }: Todo) {
-  const [isOpen, setOpen] = useState(false);
+export function TodoCard({ status, task, id }: Todo) {
+  const client = useQueryClient();
+
+  const { mutateAsync } = useMutation({
+    mutationFn: (task_id: string) => endpoint.delete(`/todos/${task_id}`),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["task"] });
+
+      console.log("Task Deleted!");
+    },
+    onError: (err) => {
+      console.error(err);
+    },
+  });
+
+  const { mutateAsync: mutateAsyncStatus } = useMutation({
+    mutationFn: (values: { task_id: string; check: boolean }) =>
+      endpoint.put(`/todos/${values.task_id}`, {
+        status: values.check,
+      }),
+
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ["task"] });
+
+      console.log("Task Checked!");
+    },
+    onError: (err) => {
+      console.error(err);
+    },
+  });
 
   return (
-    <div className="flex justify-between items-center gap-4 p-4">
-      <div className="space-y-1">
-        {isOpen ? (
-          <InputField />
-        ) : (
-          <h3 className="text-lg font-semibold">{task}</h3>
-        )}
-        <p className="text-sm">
-          <span className="font-medium">Status:</span>{" "}
-          {status ? (
-            <span className="text-green-500">Completed</span>
-          ) : (
-            <span className="text-red-500">Pending</span>
-          )}
-        </p>
-      </div>
+    <div className="flex items-center gap-4 p-4">
+      <Checkbox
+        id={id}
+        checked={status}
+        onCheckedChange={(check) =>
+          mutateAsyncStatus({
+            check: check as boolean,
+            task_id: id,
+          })
+        }
+      />
+      <Label className="text-lg font-semibold" htmlFor={id}>
+        {task}
+      </Label>
       <div className="flex-1" />
-      <Button onClick={() => setOpen(true)}>Edit</Button>
-      <Button colorScheme="error">Delete</Button>
+      <Button colorScheme="error" onClick={() => mutateAsync(id)}>
+        Delete
+      </Button>
     </div>
   );
 }

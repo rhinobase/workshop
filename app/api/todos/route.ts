@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   // Create a new todo
   const todo = await prisma.todo.create({
     data: {
-      task: body.text,
+      task: body.task,
     },
   });
 
