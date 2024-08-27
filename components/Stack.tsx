@@ -1,13 +1,12 @@
 "use client";
-
 import { endpoint } from "@/utils";
 import type { Todo } from "@prisma/client";
 import { useQuery } from "@tanstack/react-query";
-import { TodoCard } from "./TodoCard";
+import { TodoCard } from "./Card";
 import { Spinner } from "@rafty/ui";
 
-export function TodoList() {
-  const { data, isLoading, isFetching, isError } = useQuery({
+export function Stack() {
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["task"],
     queryFn: () => endpoint.get<Todo[]>("/todos").then((res) => res.data),
   });

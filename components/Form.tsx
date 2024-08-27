@@ -4,7 +4,7 @@ import { Button, InputField } from "@rafty/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-export function CreateTaskForm() {
+export function Form() {
   const client = useQueryClient();
   const [value, setValue] = useState("");
 

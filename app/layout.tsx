@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import type { PropsWithChildren } from "react";
 import "./globals.css";
-import { Providers } from "./Providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +15,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="en">
       <body className={classNames("h-screen w-full", inter.className)}>
-        <Providers>{children}</Providers>
+        {children}
       </body>
     </html>
   );
