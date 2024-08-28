@@ -679,9 +679,14 @@ Supabase provides a powerful, open-source alternative to Firebase, offering feat
 
 3.  Get Your API Keys:
 
-    - In the Supabase dashboard, navigate to the "Settings" > "API" section.
+    - In the Supabase dashboard, navigate to the "Settings" > "Database" section.
+    - You'll need the Connection String, both Transactional and Session Mode keys to connect your Next.js application to Supabase.
+    - Add these keys in your `.env` file
 
-    - You'll need the Project URL and anon API key to connect your Next.js application to Supabase.
+```bash
+DATABASE_URL="postgresql://postgres.zqfsvdftwmotdadpsdvn:[YOUR-PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
+DIRECT_URL="postgresql://postgres.zqfsvdftwmotdadpsdvn:[YOUR-PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:5432/postgres"
+```
 
 ## Prisma Setup
 
@@ -694,7 +699,7 @@ Prisma is an ORM (Object-Relational Mapping) tool for Node.js and TypeScript tha
     - Install the Prisma CLI as a development dependency:
 
       ```bash
-      npx prisma generate
+      npm install -D prisma
       ```
 
 2.  Initialize Prisma:
@@ -705,33 +710,29 @@ Prisma is an ORM (Object-Relational Mapping) tool for Node.js and TypeScript tha
       npx prisma init
       ```
 
-3.  Configure Your Database:
-
-    - Update the DATABASE_URL in your .env file with your database connection string.
-
-4.  Define Your Schema:
+3.  Define Your Schema:
 
     - Open the prisma/schema.prisma file and define your database schema using Prisma's schema language. For example:
 
       ```ts
       generator client {
-      provider = "prisma-client-js"
+        provider = "prisma-client-js"
       }
 
       datasource db {
-      provider  = "postgresql"
-      url       = env("DATABASE_URL")
-      directUrl = env("DIRECT_URL")
+        provider  = "postgresql"
+        url       = env("DATABASE_URL")
+        directUrl = env("DIRECT_URL")
       }
 
       model Todo {
-      id     String  @id @default(cuid())
-      task   String
-      status Boolean @default(false)
+        id     String  @id @default(cuid())
+        task   String
+        status Boolean @default(false)
       }
       ```
 
-5.  Generate Prisma Client:
+4.  Generate Prisma Client:
 
     - Run the following command to generate the Prisma client:
 
@@ -739,14 +740,14 @@ Prisma is an ORM (Object-Relational Mapping) tool for Node.js and TypeScript tha
       npx prisma generate
       ```
 
-6.  Run Migrations:
+5.  Run Migrations:
 
     - Create and run migrations to apply schema changes to your database:
       ```bash
       npx prisma migrate dev --name init
       ```
 
-7.  Use Prisma Client:
+6.  Use Prisma Client:
 
     - Import and use the Prisma client in your application code to interact with your database:
 
