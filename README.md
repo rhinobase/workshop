@@ -747,21 +747,6 @@ Prisma is an ORM (Object-Relational Mapping) tool for Node.js and TypeScript tha
       npx prisma migrate dev --name init
       ```
 
-6.  Use Prisma Client:
-
-    - Import and use the Prisma client in your application code to interact with your database:
-
-      ```tsx
-      import { PrismaClient } from "@prisma/client";
-
-      const prisma = new PrismaClient();
-
-      // Example usage
-      async function getTodos() {
-        return await prisma.todo.findMany();
-      }
-      ```
-
 ## API Routes
 
 Code for handling API routes related to todos, including fetching all todos `(GET)`, creating a new todo `(POST)`, updating a todo `(PUT)`, and deleting a todo `(DELETE)`.
