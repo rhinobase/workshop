@@ -10,34 +10,6 @@ To create a new Next.js application, use the following command:
 npx create-next-app@latest
 ```
 
-## Installing Essential Dependencies
-
-The project relies on several key dependencies. Here's a list of the essential libraries, along with installation instructions:
-
-- @rafty/ui: A UI component library that provides customizable components adhering to best practices.
-- @tanstack/react-query: A powerful library for managing server-side state in React applications, offering features like data fetching, caching, and synchronization.
-- axios: A promise-based HTTP client for making API requests.
-- @prisma/client: The Prisma client, an auto-generated and type-safe query builder for interacting with your database.
-
-Install these dependencies using npm:
-
-```bash
-npm install @rafty/ui @tanstack/react-query axios @prisma/client
-```
-
-## Installing Development Dependencies
-
-For development, you'll need additional tools like Prisma and Rafty UI plugins:
-
-- prisma: An ORM (Object-Relational Mapping) tool for Node.js and TypeScript, facilitating database schema management and migrations.
-- @rafty/plugin: A plugin for extending the capabilities of Rafty UI components.
-
-Install the development dependencies with the following command:
-
-```bash
-npm install -D prisma @rafty/plugin
-```
-
 ## Starting the Development Server
 
 To start the development server, run the following command:
@@ -47,19 +19,6 @@ npm run dev
 ```
 
 Then, open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
-
-## Environment Variables
-
-To run this project, you must configure environment variables. Create a `.env.local` file in the root of your project and add the following variables:
-
-```bash
-DATABASE_URL=your_database_url_here
-DIRECT_URL=another_value_here
-```
-
-## Tailwind CSS
-
-This project uses Tailwind CSS for styling. Tailwind is a utility-first CSS framework that allows for rapid UI development. Global styles are located in the `globals.css` file.
 
 ## Rafty UI
 
@@ -71,34 +30,27 @@ For the styling to work in @rafty/ui, you need to make few changes in your tailw
 
 First, install the @rafty/plugin package as devDependency and add in your tailwind.config.js file
 
-```bash
-module.exports = {
+```tsx
+import type { Config } from "tailwindcss";
+
+const config: Config = {
   darkMode: "class",
   content: [
-    ...,
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./node_modules/@rafty/ui/**/*.js",
   ],
-  theme: {
-    extend: {
-        ...,
-    },
-  },
-  plugins: [
-    ...,
-    require("@rafty/plugin")
-  ],
+  plugins: [require("@rafty/plugin")],
 };
+export default config;
 ```
 
 ## Create UI using Rafty and Tailwind CSS
 
-Details on creating the UI using Rafty and Tailwind CSS, with code snippets for `Home`, `Layout`, `Providers`, `Form`, `Stack`, and `TodoCard` components.
+Here's an example of creating a Todo App using Rafty UI and Tailwind CSS:
 
-### Page
-
-```tsx
-import { Button, Checkbox, InputField } from "@rafty/ui";
-
+```ts
 const SAMPLE_DATA = [
   {
     id: 1,
@@ -121,6 +73,10 @@ const SAMPLE_DATA = [
     task: "Sample 4",
   },
 ];
+```
+
+```tsx
+import { Button, Checkbox, InputField } from "@rafty/ui";
 
 export default function Home() {
   return (
@@ -149,525 +105,9 @@ export default function Home() {
 }
 ```
 
-## Utility Functions
-
-The `endpoint` utility function is an Axios instance configured with a base URL (`/api`). This setup simplifies making API requests by automatically appending the base URL to request paths.
-
-```tsx
-import axios from "axios";
-
-export const endpoint = axios.create({
-  baseURL: "/api",
-});
-```
-
-Benefits:
-
-- Consistency: Ensures all requests use the same base URL.
-- Maintainability: Easier to update configuration in one place.
-
-## Integrating API and Database
-
-### API Integration with Axios: Implementing API for Showing All Todos
-
-```tsx
-"use client";
-import { endpoint } from "@/utils";
-import type { Todo } from "@prisma/client";
-import { Button, Checkbox, InputField, Spinner } from "@rafty/ui";
-import { useEffect, useState } from "react";
-
-export default function Home() {
-  return (
-    <div className="max-w-5xl mx-auto w-full h-full py-8 flex flex-col gap-5">
-      <h1 className="text-4xl text-center font-bold">Todo App</h1>
-      <div className="flex justify-between items-center gap-5">
-        <InputField placeholder="Enter task name" />
-        <Button type="submit" colorScheme="primary">
-          Add Task
-        </Button>
-      </div>
-      <Stack />
-    </div>
-  );
-}
-
-function Stack() {
-  const [data, setData] = useState<Todo[] | null>(null);
-  const [isLoading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    setLoading(true);
-    endpoint.get<Todo[]>("/todos").then((res) => {
-      setData(res.data);
-      setLoading(false);
-    });
-  }, []);
-
-  if (isLoading)
-    return (
-      <div className="w-full h-full flex items-center justify-center gap-1">
-        <Spinner />
-        <p>Loading...</p>
-      </div>
-    );
-
-  if (data)
-    return (
-      <div className="border-secondary-300 rounded-md border max-h-full overflow-y-auto divide-y">
-        {data.length > 0 ? (
-          data.map(({ id, status, task }) => (
-            <div key={id} className="flex items-center gap-4 p-4">
-              <Checkbox defaultChecked={status} />
-              <p className="font-medium">{task}</p>
-              <div className="flex-1" />
-              <Button size="sm" colorScheme="error">
-                Delete
-              </Button>
-            </div>
-          ))
-        ) : (
-          <p className="py-6 text-center select-none font-medium text-secondary-500">
-            No Data Found
-          </p>
-        )}
-      </div>
-    );
-}
-```
-
-### API Integration with Tanstack React Query and Axios
-
-```tsx
-"use client";
-import { endpoint } from "@/utils";
-import type { Todo } from "@prisma/client";
-import { Button, Checkbox, classNames, InputField, Spinner } from "@rafty/ui";
-import {
-  QueryClient,
-  QueryClientProvider,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { useState } from "react";
-
-const queryClient = new QueryClient();
-
-export default function Home() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <div className="max-w-5xl mx-auto w-full h-full py-8 flex flex-col gap-5">
-        <h1 className="text-4xl text-center font-bold">Todo App</h1>
-        <Form />
-        <Stack />
-      </div>
-    </QueryClientProvider>
-  );
-}
-
-function Form() {
-  const client = useQueryClient();
-  const [value, setValue] = useState("");
-
-  const { mutateAsync, isPending } = useMutation({
-    mutationFn: (task: string) =>
-      endpoint.post("/todos", {
-        task,
-      }),
-    onSuccess: () => {
-      setValue("");
-      client.invalidateQueries({ queryKey: ["task"] });
-    },
-    onError: (err) => {
-      console.error(err);
-    },
-  });
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        mutateAsync(value.trim());
-      }}
-      className="flex justify-between items-center gap-5"
-    >
-      <InputField
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        placeholder="Enter task name"
-      />
-      <Button
-        type="submit"
-        colorScheme="primary"
-        isLoading={isPending}
-        isDisabled={value.trim() === ""}
-      >
-        Add Task
-      </Button>
-    </form>
-  );
-}
-
-function Stack() {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["task"],
-    queryFn: () => endpoint.get<Todo[]>("/todos").then((res) => res.data),
-  });
-
-  if (isLoading)
-    return (
-      <div className="w-full h-full flex items-center justify-center gap-1">
-        <Spinner />
-        <p>Loading...</p>
-      </div>
-    );
-
-  if (isError)
-    return (
-      <div className="flex w-full h-full items-center justify-center gap-1">
-        <p className="font-medium text-red-500">Error</p>
-      </div>
-    );
-
-  if (data)
-    return (
-      <div className="border-secondary-300 rounded-md border max-h-full overflow-y-auto divide-y">
-        {data.length > 0 ? (
-          data.map((item, index) => (
-            <TodoCard key={`${index}-${item.task}`} {...item} />
-          ))
-        ) : (
-          <p className="py-6 text-center select-none font-medium text-secondary-500">
-            No Data Found
-          </p>
-        )}
-      </div>
-    );
-}
-
-function TodoCard({ status, task, id }: Todo) {
-  const client = useQueryClient();
-
-  const { mutateAsync: deleteTask, isPending: isDeleting } = useMutation({
-    mutationFn: (task_id: string) => endpoint.delete(`/todos/${task_id}`),
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["task"] });
-
-      console.log("Task Deleted!");
-    },
-    onError: (err) => {
-      console.error(err);
-    },
-  });
-
-  const { mutateAsync: setStatus, isPending: isSettingStatus } = useMutation({
-    mutationFn: (values: { task_id: string; check: boolean }) =>
-      endpoint.put(`/todos/${values.task_id}`, {
-        status: values.check,
-      }),
-
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["task"] });
-
-      console.log("Task Checked!");
-    },
-    onError: (err) => {
-      console.error(err);
-    },
-  });
-
-  return (
-    <div className="flex items-center gap-4 p-4">
-      <Checkbox
-        checked={status}
-        onCheckedChange={(check) =>
-          setStatus({
-            check: check as boolean,
-            task_id: id,
-          })
-        }
-        isDisabled={isSettingStatus}
-      />
-      <p className={classNames(isSettingStatus && "opacity-50", "font-medium")}>
-        {task}
-      </p>
-      <div className="flex-1" />
-      <Button
-        size="sm"
-        colorScheme="error"
-        onClick={() => deleteTask(id)}
-        isLoading={isDeleting}
-        loadingText="Deleting"
-        isDisabled={isSettingStatus}
-      >
-        Delete
-      </Button>
-    </div>
-  );
-}
-```
-
-### Home Page
-
-This is the main page that displays the task creation form and the list of tasks.
-
-```tsx
-"use client";
-import { Form } from "@/components/Form";
-import { Stack } from "@/components/Stack";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-const queryClient = new QueryClient();
-
-export default function Home() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <div className="max-w-5xl mx-auto w-full h-full py-8 flex flex-col gap-5">
-        <h1 className="text-4xl text-center font-bold">Todo App</h1>
-        <Form />
-        <Stack />
-      </div>
-    </QueryClientProvider>
-  );
-}
-```
-
-## Layout File
-
-This layout file wraps the entire application and includes global styles and providers.
-
-```tsx
-import { classNames } from "@rafty/ui";
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import type { PropsWithChildren } from "react";
-import "./globals.css";
-import { Providers } from "./Providers";
-
-const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "TODOs App",
-  description: "Generated by create next app",
-};
-
-export default function RootLayout({ children }: PropsWithChildren) {
-  return (
-    <html lang="en">
-      <body className={classNames("h-screen w-full", inter.className)}>
-        <Providers>{children}</Providers>
-      </body>
-    </html>
-  );
-}
-```
-
-## Providers
-
-This component wraps the application with required providers like QueryClientProvider.
-
-```tsx
-"use client";
-import type { PropsWithChildren } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-const queryClient = new QueryClient();
-
-export function Providers({ children }: PropsWithChildren) {
-  return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
-}
-```
-
-## Create Task Form
-
-This component handles task creation and interacts with the API to add new tasks.
-
-```tsx
-"use client";
-import { endpoint } from "@/utils";
-import { Button, InputField } from "@rafty/ui";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-
-export function Form() {
-  const client = useQueryClient();
-  const [value, setValue] = useState("");
-
-  const { mutateAsync, isPending } = useMutation({
-    mutationFn: (task: string) =>
-      endpoint.post("/todos", {
-        task,
-      }),
-    onSuccess: () => {
-      setValue("");
-      client.invalidateQueries({ queryKey: ["task"] });
-    },
-    onError: (err) => {
-      console.error(err);
-    },
-  });
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        mutateAsync(value.trim());
-      }}
-      className="flex justify-between items-center gap-5"
-    >
-      <InputField
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        placeholder="Enter task name"
-      />
-      <Button
-        type="submit"
-        colorScheme="primary"
-        isLoading={isPending}
-        isDisabled={value.trim() === ""}
-      >
-        Add Task
-      </Button>
-    </form>
-  );
-}
-```
-
-## Todo List
-
-This component fetches and displays the list of tasks from the API.
-
-```tsx
-"use client";
-import { endpoint } from "@/utils";
-import type { Todo } from "@prisma/client";
-import { Spinner } from "@rafty/ui";
-import { useQuery } from "@tanstack/react-query";
-import { TodoCard } from "./TodoCard";
-
-export function Stack() {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["task"],
-    queryFn: () => endpoint.get<Todo[]>("/todos").then((res) => res.data),
-  });
-
-  if (isLoading)
-    return (
-      <div className="w-full h-full flex items-center justify-center gap-1">
-        <Spinner />
-        <p>Loading...</p>
-      </div>
-    );
-
-  if (isError)
-    return (
-      <div className="flex w-full h-full items-center justify-center gap-1">
-        <p className="font-medium text-red-500">Error</p>
-      </div>
-    );
-
-  if (data)
-    return (
-      <div className="border-secondary-300 rounded-md border max-h-full overflow-y-auto divide-y">
-        {data.length > 0 ? (
-          data.map((item, index) => (
-            <TodoCard key={`${index}-${item.task}`} {...item} />
-          ))
-        ) : (
-          <p className="py-6 text-center select-none font-medium text-secondary-500">
-            No Data Found
-          </p>
-        )}
-      </div>
-    );
-}
-```
-
-## Todo Card
-
-This component displays individual tasks and allows for task deletion and status updating.
-
-```tsx
-"use client";
-import { endpoint } from "@/utils";
-import type { Todo } from "@prisma/client";
-import { Button, Checkbox, classNames } from "@rafty/ui";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-export function TodoCard({ status, task, id }: Todo) {
-  const client = useQueryClient();
-
-  const { mutateAsync: deleteTask, isPending: isDeleting } = useMutation({
-    mutationFn: (task_id: string) => endpoint.delete(`/todos/${task_id}`),
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["task"] });
-
-      console.log("Task Deleted!");
-    },
-    onError: (err) => {
-      console.error(err);
-    },
-  });
-
-  const { mutateAsync: setStatus, isPending: isSettingStatus } = useMutation({
-    mutationFn: (values: { task_id: string; check: boolean }) =>
-      endpoint.put(`/todos/${values.task_id}`, {
-        status: values.check,
-      }),
-
-    onSuccess: () => {
-      client.invalidateQueries({ queryKey: ["task"] });
-
-      console.log("Task Checked!");
-    },
-    onError: (err) => {
-      console.error(err);
-    },
-  });
-
-  return (
-    <div className="flex items-center gap-4 p-4">
-      <Checkbox
-        checked={status}
-        onCheckedChange={(check) =>
-          setStatus({
-            check: check as boolean,
-            task_id: id,
-          })
-        }
-        isDisabled={isSettingStatus}
-      />
-      <p className={classNames(isSettingStatus && "opacity-50", "font-medium")}>
-        {task}
-      </p>
-      <div className="flex-1" />
-      <Button
-        size="sm"
-        colorScheme="error"
-        onClick={() => deleteTask(id)}
-        isLoading={isDeleting}
-        loadingText="Deleting"
-        isDisabled={isSettingStatus}
-      >
-        Delete
-      </Button>
-    </div>
-  );
-}
-```
-
 ## Supabase Integration
 
-Supabase provides a powerful, open-source alternative to Firebase, offering features like authentication, real-time databases, and storage.
-
-### Setting Up Supabase
+Steps to integrate supabase in your application:
 
 1.  Sign Up for Supabase:
 
@@ -681,18 +121,16 @@ Supabase provides a powerful, open-source alternative to Firebase, offering feat
 
     - In the Supabase dashboard, navigate to the "Settings" > "Database" section.
     - You'll need the Connection String, both Transactional and Session Mode keys to connect your Next.js application to Supabase.
-    - Add these keys in your `.env` file
+    - To run this project, you must configure environment variables. Add the following variables in your `.env` file:
 
-```bash
-DATABASE_URL="postgresql://postgres.zqfsvdftwmotdadpsdvn:[YOUR-PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
-DIRECT_URL="postgresql://postgres.zqfsvdftwmotdadpsdvn:[YOUR-PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:5432/postgres"
-```
+      ```bash
+      DATABASE_URL="postgresql://postgres.zqfsvdftwmotdadpsdvn:[YOUR-PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
+      DIRECT_URL="postgresql://postgres.zqfsvdftwmotdadpsdvn:[YOUR-PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:5432/postgres"
+      ```
 
 ## Prisma Setup
 
-Prisma is an ORM (Object-Relational Mapping) tool for Node.js and TypeScript that simplifies database interactions.
-
-### Setting Up Prisma
+Steps to setup prisma in your application:
 
 1.  Install Prisma CLI:
 
@@ -700,6 +138,11 @@ Prisma is an ORM (Object-Relational Mapping) tool for Node.js and TypeScript tha
 
       ```bash
       npm install -D prisma
+      ```
+
+    - Install Prisma client:
+      ```bash
+      npm install @prisma/client
       ```
 
 2.  Initialize Prisma:
@@ -751,7 +194,7 @@ Prisma is an ORM (Object-Relational Mapping) tool for Node.js and TypeScript tha
 
 Code for handling API routes related to todos, including fetching all todos `(GET)`, creating a new todo `(POST)`, updating a todo `(PUT)`, and deleting a todo `(DELETE)`.
 
-### Todos
+### /api/todos/route.ts
 
 This route handles fetching all tasks and creating a new task.
 
@@ -784,7 +227,7 @@ export async function POST(req: Request) {
 }
 ```
 
-## Todo
+### /api/todos/[id]/route.ts
 
 This route handles updating and deleting a specific task.
 
@@ -829,6 +272,304 @@ export async function DELETE(
   return Response.json({});
 }
 ```
+
+## Axios Setup
+
+Steps to install and setup axios:
+
+1. Install Axios :
+
+   ```bash
+   npm install axios
+   ```
+
+2. Create an Axios Instance:
+   The `endpoint` utility function is an Axios instance configured with a base URL (`/api`). This setup simplifies making API requests by automatically appending the base URL to request paths.
+
+   ```tsx
+   import axios from "axios";
+
+   export const endpoint = axios.create({
+     baseURL: "/api",
+   });
+   ```
+
+## Integrating API with front-end
+
+### API Integration using Axios: Implementing API for Showing All Todos
+
+```tsx
+"use client";
+import { endpoint } from "@/utils";
+import type { Todo } from "@prisma/client";
+import { Button, Checkbox, InputField, Spinner } from "@rafty/ui";
+import { useEffect, useState } from "react";
+
+export default function Home() {
+  return (
+    <div className="max-w-5xl mx-auto w-full h-full py-8 flex flex-col gap-5">
+      <h1 className="text-4xl text-center font-bold">Todo App</h1>
+      <div className="flex justify-between items-center gap-5">
+        <InputField placeholder="Enter task name" />
+        <Button colorScheme="primary">Add Task</Button>
+      </div>
+      <Stack />
+    </div>
+  );
+}
+
+function Stack() {
+  const [data, setData] = useState<Todo[] | null>(null);
+  const [isLoading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    setLoading(true);
+    endpoint.get<Todo[]>("/todos").then((res) => {
+      setData(res.data);
+      setLoading(false);
+    });
+  }, []);
+
+  if (isLoading)
+    return (
+      <div className="w-full h-full flex items-center justify-center gap-1">
+        <Spinner />
+        <p>Loading...</p>
+      </div>
+    );
+
+  if (data)
+    return (
+      <div className="border-secondary-300 rounded-md border max-h-full overflow-y-auto divide-y">
+        {data.length > 0 ? (
+          data.map(({ id, status, task }) => (
+            <div key={id} className="flex items-center gap-4 p-4">
+              <Checkbox defaultChecked={status} />
+              <p className="font-medium">{task}</p>
+              <div className="flex-1" />
+              <Button size="sm" colorScheme="error">
+                Delete
+              </Button>
+            </div>
+          ))
+        ) : (
+          <p className="py-6 text-center select-none font-medium text-secondary-500">
+            No Data Found
+          </p>
+        )}
+      </div>
+    );
+}
+```
+
+### API Integration using Tanstack React Query and Axios
+
+Steps to setup Tanstack React Query:
+
+- Install Tanstack React Query
+
+  ```bash
+  npm install @tanstack/react-query
+  ```
+
+Details on creating the UI using Rafty and Tailwind CSS, with code snippets for `Home`, `Layout`, `Providers`, `Form`, `Stack`, and `Card` components.
+
+- Create Query Client and add it to Query Client Provider.
+
+  ```tsx
+  "use client";
+  import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+
+  const queryClient = new QueryClient();
+
+  export default function Home() {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <div className="max-w-5xl mx-auto w-full h-full py-8 flex flex-col gap-5">
+          <h1 className="text-4xl text-center font-bold">Todo App</h1>
+          <Form />
+          <Stack />
+        </div>
+      </QueryClientProvider>
+    );
+  }
+  ```
+
+  Create Form to add task:
+
+  ```tsx
+  "use client";
+  import { endpoint } from "@/utils";
+  import { Button, InputField } from "@rafty/ui";
+  import { useMutation, useQueryClient } from "@tanstack/react-query";
+  import { useState } from "react";
+
+  export function Form() {
+    const client = useQueryClient();
+    const [value, setValue] = useState("");
+
+    const { mutateAsync, isPending } = useMutation({
+      mutationFn: (task: string) =>
+        endpoint.post("/todos", {
+          task,
+        }),
+      onSuccess: () => {
+        setValue("");
+        client.invalidateQueries({ queryKey: ["task"] });
+      },
+      onError: (err) => {
+        console.error(err);
+      },
+    });
+
+    return (
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          mutateAsync(value.trim());
+        }}
+        className="flex justify-between items-center gap-5"
+      >
+        <InputField
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder="Enter task name"
+        />
+        <Button
+          type="submit"
+          colorScheme="primary"
+          isLoading={isPending}
+          isDisabled={value.trim() === ""}
+        >
+          Add Task
+        </Button>
+      </form>
+    );
+  }
+  ```
+
+  Create Stack to display list if tasks:
+
+  ```tsx
+  "use client";
+  import { endpoint } from "@/utils";
+  import type { Todo } from "@prisma/client";
+  import { Spinner } from "@rafty/ui";
+  import { useQuery } from "@tanstack/react-query";
+  import { TodoCard } from "./TodoCard";
+
+  export function Stack() {
+    const { data, isLoading, isError } = useQuery({
+      queryKey: ["task"],
+      queryFn: () => endpoint.get<Todo[]>("/todos").then((res) => res.data),
+    });
+
+    if (isLoading)
+      return (
+        <div className="w-full h-full flex items-center justify-center gap-1">
+          <Spinner />
+          <p>Loading...</p>
+        </div>
+      );
+
+    if (isError)
+      return (
+        <div className="flex w-full h-full items-center justify-center gap-1">
+          <p className="font-medium text-red-500">Error</p>
+        </div>
+      );
+
+    if (data)
+      return (
+        <div className="border-secondary-300 rounded-md border max-h-full overflow-y-auto divide-y">
+          {data.length > 0 ? (
+            data.map((item, index) => (
+              <TodoCard key={`${index}-${item.task}`} {...item} />
+            ))
+          ) : (
+            <p className="py-6 text-center select-none font-medium text-secondary-500">
+              No Data Found
+            </p>
+          )}
+        </div>
+      );
+  }
+  ```
+
+  TodoCard component used in Stack component:
+
+  ```tsx
+  "use client";
+  import { endpoint } from "@/utils";
+  import type { Todo } from "@prisma/client";
+  import { Button, Checkbox, classNames } from "@rafty/ui";
+  import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+  export function Card({ status, task, id }: Todo) {
+    const client = useQueryClient();
+
+    const { mutateAsync: deleteTask, isPending: isDeleting } = useMutation({
+      mutationFn: (task_id: string) => endpoint.delete(`/todos/${task_id}`),
+      onSuccess: () => {
+        client.invalidateQueries({ queryKey: ["task"] });
+
+        console.log("Task Deleted!");
+      },
+      onError: (err) => {
+        console.error(err);
+      },
+    });
+
+    const { mutateAsync: setStatus, isPending: isSettingStatus } = useMutation({
+      mutationFn: (values: { task_id: string; check: boolean }) =>
+        endpoint.put(`/todos/${values.task_id}`, {
+          status: values.check,
+        }),
+
+      onSuccess: () => {
+        client.invalidateQueries({ queryKey: ["task"] });
+
+        console.log("Task Checked!");
+      },
+      onError: (err) => {
+        console.error(err);
+      },
+    });
+
+    return (
+      <div className="flex items-center gap-4 p-4">
+        <Checkbox
+          checked={status}
+          onCheckedChange={(check) =>
+            setStatus({
+              check: check as boolean,
+              task_id: id,
+            })
+          }
+          isDisabled={isSettingStatus}
+        />
+        <p
+          className={classNames(isSettingStatus && "opacity-50", "font-medium")}
+        >
+          {task}
+        </p>
+        <div className="flex-1" />
+        <Button
+          size="sm"
+          colorScheme="error"
+          onClick={() => deleteTask(id)}
+          isLoading={isDeleting}
+          loadingText="Deleting"
+          isDisabled={isSettingStatus}
+        >
+          Delete
+        </Button>
+      </div>
+    );
+  }
+  ```
 
 ## Resources
 
