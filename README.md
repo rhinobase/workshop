@@ -26,6 +26,18 @@ Rafty UI is a UI component library used in this project for building user interf
 
 ### Setup Rafty UI
 
+1. Install the Rafty UI as a dependency:
+
+   ```bash
+   npm install @rafty/ui
+   ```
+
+2. Install the Rafty Plugin as a development dependency:
+
+   ```bash
+   npm install -D @rafty/plugin
+   ```
+
 For the styling to work in @rafty/ui, you need to make few changes in your tailwind.config.js file.
 
 First, install the @rafty/plugin package as devDependency and add in your tailwind.config.js file
